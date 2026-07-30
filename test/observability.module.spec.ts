@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import { transports } from 'winston'
 
-import { LOGGER_OPTIONS } from '../lib/modules/logger/config/logger.tokens'
 import { LoggerService } from '../lib'
 import { OpenTelemetryRuntime } from '../lib'
 import { ObservabilityModule } from '../lib'
+import { LOGGER_OPTIONS } from '../lib/modules/logger/config/logger.tokens'
 import { ObservabilityService } from '../lib/observability.service'
 
 const TEST_CONFIG = Symbol('TEST_CONFIG')

@@ -1,9 +1,9 @@
-import {mkdirSync} from 'node:fs'
-import {resolve} from 'node:path'
-import {format, transports} from 'winston'
+import { mkdirSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { format, transports } from 'winston'
 import Transport from 'winston-transport'
 
-import {NormalizedLoggerOptions} from '../config/logger-options.interface'
+import { NormalizedLoggerOptions } from '../config/logger-options.interface'
 
 function createConsoleFormat() {
 	return format.combine(
