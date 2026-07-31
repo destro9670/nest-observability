@@ -52,7 +52,8 @@
 		}
 	},
 	"files": [
-		"dist"
+		"dist",
+		"docs"
 	],
 	"publishConfig": {
 		"access": "public"
@@ -61,8 +62,8 @@
 		"clean": "rimraf dist",
 		"build": "npm run clean && tsc -p tsconfig.build.json",
 		"typecheck": "tsc -p tsconfig.build.json --noEmit",
-		"format": "prettier --write \"lib/**/*.ts\" \"test/**/*.ts\" README.md package.json",
-		"format:check": "prettier --check \"lib/**/*.ts\" \"test/**/*.ts\" README.md package.json",
+		"format": "prettier --write \"lib/**/*.ts\" \"test/**/*.ts\" \"docs/**/*.md\" README.md package.json",
+		"format:check": "prettier --check \"lib/**/*.ts\" \"test/**/*.ts\" \"docs/**/*.md\" README.md package.json",
 		"test": "jest --runInBand",
 		"prepublishOnly": "npm run build"
 	},
