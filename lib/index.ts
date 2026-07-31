@@ -21,6 +21,7 @@ export type {
 export {
 	CorrelationContextService,
 	CorrelationInterceptor,
+	HttpLoggingInterceptor,
 	LoggerModule,
 	LoggerService
 } from './modules/logger'

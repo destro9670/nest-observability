@@ -31,11 +31,12 @@ sdk.start()
 // Winston must load only after instrumentation has started.
 const winston = require('winston')
 const logger = winston.createLogger({
+  level: 'debug',
   transports: [new winston.transports.Console({ silent: true })]
 })
 
 trace.getTracer('integration-test').startActiveSpan('test-span', span => {
-  logger.info('single-record')
+  logger.debug('single-record')
   span.end()
 })
 
@@ -48,6 +49,7 @@ setTimeout(async () => {
   const valid =
     records.length === 1 &&
     spans.length === 1 &&
+		records[0]?.severityText === 'debug' &&
     records[0]?.spanContext?.traceId === spans[0]?.spanContext().traceId
 
   await sdk.shutdown()

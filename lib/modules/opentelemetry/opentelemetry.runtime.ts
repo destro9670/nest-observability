@@ -123,11 +123,17 @@ export function createOpenTelemetryComponents(
 
 export class OpenTelemetryRuntime {
 	private readonly components: OpenTelemetryRuntimeComponents
+	private readonly serviceName: string
 	private started = false
 	private stopped = false
 
 	constructor(options: OpenTelemetryOptions) {
 		this.components = createOpenTelemetryComponents(options)
+		this.serviceName = options.serviceName.trim()
+
+		console.debug('[OpenTelemetry] runtime created', {
+			serviceName: this.serviceName
+		})
 	}
 
 	start(): void {
@@ -143,6 +149,10 @@ export class OpenTelemetryRuntime {
 
 		this.components.sdk.start()
 		this.started = true
+
+		console.debug('[OpenTelemetry] runtime started', {
+			serviceName: this.serviceName
+		})
 	}
 
 	async shutdown(): Promise<void> {
@@ -159,6 +169,61 @@ export class OpenTelemetryRuntime {
 	}
 }
 
+/**
+ * Creates an OpenTelemetry runtime configured for logs, traces, metrics, and
+ * automatic Node.js instrumentation.
+ *
+ * Creating the runtime validates and normalizes the supplied options, but does
+ * not start the underlying OpenTelemetry SDK. Call {@link OpenTelemetryRuntime.start}
+ * explicitly. The runtime should be created and started from a preload module
+ * before NestJS, Winston, HTTP clients, database drivers, or other instrumented
+ * libraries are imported.
+ *
+ * Import this function from the dedicated `/opentelemetry` entry point. The
+ * package root also exports it, but importing the root may load instrumented
+ * libraries before the SDK is started.
+ *
+ * @param options - Service identity, OTLP signal exporters, metric collection,
+ * and incoming HTTP tracing configuration.
+ * @returns A lifecycle controller that starts the SDK, flushes and shuts it
+ * down, and reports whether it is running.
+ *
+ * @throws {Error} When `serviceName` is empty, an exporter endpoint is not a
+ * valid HTTP(S) URL, or `metrics.exportIntervalMs` is not a positive integer.
+ *
+ * @example Start telemetry from a preload module
+ * ```ts
+ * // src/instrumentation.ts
+ * import { createOpenTelemetryRuntime } from '@varent/nest-observability/opentelemetry'
+ *
+ * export const openTelemetryRuntime = createOpenTelemetryRuntime({
+ * 	serviceName: 'orders-service',
+ * 	serviceVersion: '1.4.0',
+ * 	environment: process.env.NODE_ENV,
+ * 	traces: {
+ * 		endpoint: process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+ * 	},
+ * 	metrics: {
+ * 		endpoint: process.env.OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+ * 		exportIntervalMs: 30_000
+ * 	}
+ * })
+ *
+ * openTelemetryRuntime.start()
+ * ```
+ *
+ * @example Disable signals that the process does not produce
+ * ```ts
+ * const openTelemetryRuntime = createOpenTelemetryRuntime({
+ * 	serviceName: 'background-worker',
+ * 	logs: { enabled: true },
+ * 	traces: { enabled: false },
+ * 	metrics: { enabled: false }
+ * })
+ *
+ * openTelemetryRuntime.start()
+ * ```
+ */
 export function createOpenTelemetryRuntime(
 	options: OpenTelemetryOptions
 ): OpenTelemetryRuntime {

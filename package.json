@@ -24,6 +24,16 @@
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"typesVersions": {
+		"*": {
+			"logger": [
+				"dist/modules/logger/index.d.ts"
+			],
+			"opentelemetry": [
+				"dist/modules/opentelemetry/index.d.ts"
+			]
+		}
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",

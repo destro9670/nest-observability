@@ -5,6 +5,7 @@ const sdkShutdown = jest.fn().mockResolvedValue(undefined)
 const nodeSdkConstructor = jest.fn()
 const winstonInstrumentationConstructor = jest.fn()
 const autoInstrumentationsConstructor = jest.fn()
+const consoleDebug = jest.spyOn(console, 'debug').mockImplementation()
 
 jest.mock('@opentelemetry/sdk-node', () => ({
 	NodeSDK: jest.fn().mockImplementation(configuration => {
@@ -31,6 +32,10 @@ jest.mock('@opentelemetry/instrumentation-winston', () => ({
 }))
 
 describe('OpenTelemetryRuntime', () => {
+	afterAll(() => {
+		consoleDebug.mockRestore()
+	})
+
 	it('configures all enabled signal pipelines', () => {
 		new OpenTelemetryRuntime({ serviceName: 'service' })
 
@@ -87,6 +92,27 @@ describe('OpenTelemetryRuntime', () => {
 		runtime.start()
 
 		expect(sdkStart).toHaveBeenCalledTimes(1)
+	})
+
+	it('logs runtime creation and start once', () => {
+		const runtime = new OpenTelemetryRuntime({
+			serviceName: ' service '
+		})
+
+		runtime.start()
+		runtime.start()
+
+		expect(consoleDebug).toHaveBeenNthCalledWith(
+			1,
+			'[OpenTelemetry] runtime created',
+			{ serviceName: 'service' }
+		)
+		expect(consoleDebug).toHaveBeenNthCalledWith(
+			2,
+			'[OpenTelemetry] runtime started',
+			{ serviceName: 'service' }
+		)
+		expect(consoleDebug).toHaveBeenCalledTimes(2)
 	})
 
 	it('shuts down only once and cannot restart', async () => {

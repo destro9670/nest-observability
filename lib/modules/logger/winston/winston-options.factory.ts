@@ -12,6 +12,8 @@ export function createWinstonOptions(
 	options: NormalizedLoggerOptions
 ): WinstonModuleOptions {
 	return {
+		level: options.logLevel,
+
 		transports: options.transports ?? createDefaultTransports(options),
 
 		exceptionHandlers:
