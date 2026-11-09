@@ -39,12 +39,14 @@ openTelemetryRuntime.start()
 
 Import this module for its side effect as the first import in `main.ts`:
 
+<!-- prettier-ignore -->
 ```ts
 // This import must remain first.
+import './config/otel.config'
+
 import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app.module'
-import '~/config/otel.config'
 ```
 
 Do not move the side-effect import below NestJS, Winston, HTTP client, or
@@ -68,6 +70,7 @@ module and Node's CommonJS `--require` or ESM `--import` option:
 | Option                     | Default       | Description                                              |
 | -------------------------- | ------------- | -------------------------------------------------------- |
 | `serviceName`              | Required      | Non-empty `service.name` resource attribute.             |
+| `hostName`                 | SDK detection | Overrides the `host.name` resource attribute.            |
 | `serviceVersion`           | `unknown`     | `service.version` resource attribute.                    |
 | `environment`              | `development` | `deployment.environment.name` resource attribute.        |
 | `logs.enabled`             | `true`        | Enables OTLP log processing and Winston log sending.     |
@@ -79,6 +82,12 @@ module and Node's CommonJS `--require` or ESM `--import` option:
 | `metrics.hostMetrics`      | `true`        | Enables host metrics when metrics are enabled.           |
 | `metrics.exportIntervalMs` | `60000`       | Positive integer metric export interval in milliseconds. |
 | `ignoredIncomingPaths`     | Health paths  | Exact incoming paths excluded from HTTP tracing.         |
+
+Set `hostName: 'orders-prod-01'` in `createOpenTelemetryRuntime()` to apply
+that value to OTLP logs, metrics, and traces. It takes precedence over host
+names detected by the SDK, including `host.name` in `OTEL_RESOURCE_ATTRIBUTES`.
+Omit `hostName` to use the SDK's configured resource detectors. The value is
+trimmed, and an explicitly blank value causes a startup error.
 
 Default ignored paths:
 

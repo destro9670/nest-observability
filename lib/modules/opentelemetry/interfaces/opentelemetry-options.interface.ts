@@ -85,6 +85,7 @@ export interface OpenTelemetryMetricsOptions extends OpenTelemetrySignalOptions 
  * ```ts
  * const runtime = createOpenTelemetryRuntime({
  * 	serviceName: 'orders-service',
+ * 	hostName: 'orders-prod-01',
  * 	serviceVersion: '1.4.0',
  * 	environment: 'production',
  * 	logs: {
@@ -113,6 +114,14 @@ export interface OpenTelemetryOptions {
 	 * @example `'orders-service'`
 	 */
 	serviceName: string
+	/**
+	 * Overrides the `host.name` resource attribute for logs, metrics, and traces.
+	 * Leading and trailing whitespace is removed. When omitted, the SDK uses
+	 * its configured resource detectors.
+	 *
+	 * @example `'orders-prod-01'`
+	 */
+	hostName?: string
 	/**
 	 * Service version reported as the `service.version` resource attribute.
 	 * Leading and trailing whitespace is removed.
@@ -169,6 +178,8 @@ export interface OpenTelemetryOptions {
 export interface NormalizedOpenTelemetryOptions {
 	/** Trimmed, non-empty OpenTelemetry service name. */
 	serviceName: string
+	/** Trimmed host name when explicitly configured. */
+	hostName: string | undefined
 	/** Trimmed service version or `'unknown'`. */
 	serviceVersion: string
 	/** Trimmed deployment environment or `'development'`. */

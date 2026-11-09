@@ -1,6 +1,6 @@
 {
 	"name": "@varent/nest-observability",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Nest Observability Kit",
 	"license": "ISC",
 	"author": "dm.gabz",

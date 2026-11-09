@@ -36,6 +36,15 @@ export function normalizeOpenTelemetryOptions(
 		)
 	}
 
+	const hostName =
+		typeof options.hostName === 'string'
+			? options.hostName.trim()
+			: undefined
+
+	if (options.hostName !== undefined && !hostName) {
+		throw new Error('[OpenTelemetry] hostName must be a non-empty string')
+	}
+
 	const exportIntervalMs = options.metrics?.exportIntervalMs ?? 60_000
 
 	if (!Number.isInteger(exportIntervalMs) || exportIntervalMs <= 0) {
@@ -46,6 +55,7 @@ export function normalizeOpenTelemetryOptions(
 
 	return {
 		serviceName,
+		hostName,
 		serviceVersion: options.serviceVersion?.trim() || 'unknown',
 		environment: options.environment?.trim() || 'development',
 		logs: {

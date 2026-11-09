@@ -6,11 +6,22 @@ import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston'
 import { CompressionAlgorithm } from '@opentelemetry/otlp-exporter-base'
 import {
 	defaultResource,
-	resourceFromAttributes
+	envDetector,
+	hostDetector,
+	osDetector,
+	processDetector,
+	ResourceDetector,
+	resourceFromAttributes,
+	serviceInstanceIdDetector
 } from '@opentelemetry/resources'
 import { BatchLogRecordProcessor } from '@opentelemetry/sdk-logs'
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
-import { NodeSDK, NodeSDKConfiguration } from '@opentelemetry/sdk-node'
+import {
+	api,
+	core,
+	NodeSDK,
+	NodeSDKConfiguration
+} from '@opentelemetry/sdk-node'
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace'
 import {
 	ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -25,6 +36,38 @@ type SdkLifecycle = Pick<NodeSDK, 'start' | 'shutdown'>
 
 interface OpenTelemetryRuntimeComponents {
 	sdk: SdkLifecycle
+}
+
+function getSdkResourceDetectors(): ResourceDetector[] {
+	const names = core.getStringListFromEnv('OTEL_NODE_RESOURCE_DETECTORS')
+	if (!names) {
+		return [envDetector, processDetector, hostDetector]
+	}
+
+	// Match NodeSDK's built-in detectors and ordering when adding an override.
+	const detectors = new Map<string, ResourceDetector>([
+		['host', hostDetector],
+		['os', osDetector],
+		['serviceinstance', serviceInstanceIdDetector],
+		['process', processDetector],
+		['env', envDetector]
+	])
+	if (names.includes('all')) {
+		return [...detectors.values()]
+	}
+	if (names.includes('none')) {
+		return []
+	}
+
+	return names.flatMap(name => {
+		const detector = detectors.get(name)
+		if (!detector) {
+			api.diag.warn(
+				`Invalid resource detector "${name}" specified in the environment variable OTEL_NODE_RESOURCE_DETECTORS`
+			)
+		}
+		return detector ?? []
+	})
 }
 
 function optionalUrl(endpoint: string): { url?: string } {
@@ -113,6 +156,14 @@ export function createOpenTelemetryComponents(
 				disableLogSending: !normalized.logs.enabled,
 				disableLogCorrelation: false
 			})
+		]
+	}
+
+	const { hostName } = normalized
+	if (hostName !== undefined) {
+		configuration.resourceDetectors = [
+			...getSdkResourceDetectors(),
+			{ detect: () => ({ attributes: { 'host.name': hostName } }) }
 		]
 	}
 

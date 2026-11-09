@@ -1,3 +1,5 @@
+import { detectResources } from '@opentelemetry/resources'
+
 import { OpenTelemetryRuntime } from '../lib'
 
 const sdkStart = jest.fn()
@@ -8,6 +10,7 @@ const autoInstrumentationsConstructor = jest.fn()
 const consoleDebug = jest.spyOn(console, 'debug').mockImplementation()
 
 jest.mock('@opentelemetry/sdk-node', () => ({
+	...jest.requireActual('@opentelemetry/sdk-node'),
 	NodeSDK: jest.fn().mockImplementation(configuration => {
 		nodeSdkConstructor(configuration)
 		return {
@@ -41,6 +44,7 @@ describe('OpenTelemetryRuntime', () => {
 
 		const configuration = nodeSdkConstructor.mock.calls[0][0]
 
+		expect(configuration.resourceDetectors).toBeUndefined()
 		expect(configuration.logRecordProcessors).toHaveLength(1)
 		expect(configuration.metricReaders).toHaveLength(1)
 		expect(configuration.spanProcessors).toHaveLength(1)
@@ -56,6 +60,37 @@ describe('OpenTelemetryRuntime', () => {
 			})
 		)
 	})
+
+	it.each([undefined, 'host, env', 'all', 'none'])(
+		'uses the explicit host name with detectors %s',
+		detectors => {
+			const env = jest.replaceProperty(process, 'env', {
+				...process.env,
+				OTEL_NODE_RESOURCE_DETECTORS: detectors,
+				OTEL_RESOURCE_ATTRIBUTES:
+					'host.name=env-host,service.namespace=orders'
+			})
+
+			try {
+				new OpenTelemetryRuntime({
+					serviceName: 'service',
+					hostName: 'orders-prod-01'
+				})
+
+				const { resource, resourceDetectors } =
+					nodeSdkConstructor.mock.calls[0][0]
+				const { attributes } = resource.merge(
+					detectResources({ detectors: resourceDetectors })
+				)
+				expect(attributes['host.name']).toBe('orders-prod-01')
+				expect(attributes['service.namespace']).toBe(
+					detectors === 'none' ? undefined : 'orders'
+				)
+			} finally {
+				env.restore()
+			}
+		}
+	)
 
 	it('uses empty processor arrays to disable SDK env fallbacks', () => {
 		new OpenTelemetryRuntime({

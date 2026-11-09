@@ -8,6 +8,7 @@ describe('normalizeOpenTelemetryOptions', () => {
 			})
 		).toEqual({
 			serviceName: 'search-service',
+			hostName: undefined,
 			serviceVersion: 'unknown',
 			environment: 'development',
 			logs: { enabled: true, endpoint: '' },
@@ -20,6 +21,24 @@ describe('normalizeOpenTelemetryOptions', () => {
 			},
 			ignoredIncomingPaths: ['/health', '/health/live', '/health/ready']
 		})
+	})
+
+	it('trims an explicit host name', () => {
+		expect(
+			normalizeOpenTelemetryOptions({
+				serviceName: 'service',
+				hostName: ' orders-prod-01 '
+			}).hostName
+		).toBe('orders-prod-01')
+	})
+
+	it('rejects a blank host name', () => {
+		expect(() =>
+			normalizeOpenTelemetryOptions({
+				serviceName: 'service',
+				hostName: ' '
+			})
+		).toThrow('hostName must be a non-empty string')
 	})
 
 	it('rejects an empty service name', () => {

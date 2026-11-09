@@ -77,14 +77,16 @@ OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
 
 ### 2. Import instrumentation first in `main.ts`
 
+<!-- prettier-ignore -->
 ```ts
 // src/main.ts
 // This side-effect import must remain the first import in this file.
+import './config/otel.config'
+
 import { NestFactory } from '@nestjs/core'
 import { LoggerService } from '@varent/nest-observability'
 
 import { AppModule } from './app.module'
-import '~/config/otel.config'
 
 async function bootstrap(): Promise<void> {
 	const app = await NestFactory.create(AppModule, {
@@ -205,6 +207,7 @@ and `durationMs`.
 | Option                     | Default       | Description                                      |
 | -------------------------- | ------------- | ------------------------------------------------ |
 | `serviceName`              | Required      | Non-empty `service.name` resource attribute.     |
+| `hostName`                 | SDK detection | Overrides the `host.name` resource attribute.    |
 | `serviceVersion`           | `unknown`     | `service.version` resource attribute.            |
 | `environment`              | `development` | Deployment environment resource attribute.       |
 | `logs.enabled`             | `true`        | Enables OTLP log export.                         |
